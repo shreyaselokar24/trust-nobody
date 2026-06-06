@@ -1,0 +1,13 @@
+{
+  "name": "trust-nobody",
+  "version": "1.0.0",
+  "description": "A multiplayer social deduction game where you trust nobody.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}

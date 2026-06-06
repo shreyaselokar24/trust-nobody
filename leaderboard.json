@@ -1,0 +1,18 @@
+{
+  "faahh": {
+    "points": 20,
+    "gamesPlayed": 1,
+    "mafiaWins": 0,
+    "agentWins": 0,
+    "missionsCompleted": 0,
+    "correctVotes": 0
+  },
+  "skibidii": {
+    "points": 110,
+    "gamesPlayed": 1,
+    "mafiaWins": 0,
+    "agentWins": 1,
+    "missionsCompleted": 0,
+    "correctVotes": 1
+  }
+}

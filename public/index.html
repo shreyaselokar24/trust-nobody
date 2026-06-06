@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trust Nobody - Social Deduction Game</title>
+    <!-- Google Fonts - Press Start 2P and VT323 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="retro-body">
+    <!-- Screen vignette overlay for critical warnings -->
+    <div id="screen-vignette" class="screen-vignette"></div>
+
+    <!-- ===== DRAMATIC ROLE REVEAL OVERLAY ===== -->
+    <div id="role-reveal-overlay" class="role-reveal-overlay" style="display:none;">
+
+        <!-- Phase 1: Incoming transmission banner -->
+        <div id="reveal-phase-incoming" class="reveal-phase-incoming">
+            <div class="incoming-scanline"></div>
+            <div class="incoming-label">INCOMING TRANSMISSION</div>
+            <div class="incoming-blink">■ ■ ■</div>
+        </div>
+
+        <!-- Phase 2: Flip card -->
+        <div id="reveal-card-wrapper" class="reveal-card-wrapper" style="display:none;">
+            <div id="reveal-flip-card" class="reveal-flip-card">
+
+                <!-- Card Back (shown first) -->
+                <div class="reveal-card-face reveal-card-back">
+                    <div class="card-back-pattern"></div>
+                    <div class="card-back-emblem">🔒</div>
+                    <div class="card-back-label">CLASSIFIED</div>
+                </div>
+
+                <!-- Card Front (shown after flip) -->
+                <div class="reveal-card-face reveal-card-front">
+                    <div class="reveal-card-header">
+                        <span class="reveal-dossier-label">DOSSIER #<span id="reveal-dossier-num">--</span></span>
+                    </div>
+                    <div id="reveal-mascot-container" class="reveal-mascot-pic">
+                        <!-- Mascot image injected by JS -->
+                    </div>
+                    <div id="reveal-role-badge" class="reveal-role-badge">
+                        <span id="reveal-role-value" class="reveal-role-text">AGENT</span>
+                    </div>
+                    <div id="reveal-role-instruction" class="reveal-role-instruction"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase 3: Classified mission document -->
+        <div id="reveal-mission-doc" class="reveal-mission-doc" style="display:none;">
+            <div class="mission-doc-stamp">CLASSIFIED</div>
+            <div class="mission-doc-header">
+                <span class="mission-doc-icon">📋</span>
+                <span class="mission-doc-title">SECRET MISSION ORDER</span>
+            </div>
+            <div class="mission-doc-lines">
+                <div class="mission-doc-line"></div>
+                <div class="mission-doc-line short"></div>
+            </div>
+            <div id="reveal-mission-text" class="reveal-mission-text">---</div>
+            <div class="mission-doc-footer">
+                <span class="mission-doc-classify">TOP SECRET // EYES ONLY</span>
+            </div>
+        </div>
+
+        <!-- Countdown until deployment -->
+        <div id="reveal-overlay-footer" class="reveal-overlay-footer" style="display:none;">
+            COMMENCING DEPLOYMENT IN <span id="reveal-timer-sec">3</span>s
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="app-container">
+        
+        <!-- ================= HOMEPAGE SCREEN ================= -->
+        <section id="home-screen" class="screen active">
+            <div class="pixel-loader-container">
+                <span class="pixel-loader-label">LOADING MODULES...</span>
+                <div class="pixel-loader-bar"><div class="pixel-loader-fill"></div></div>
+            </div>
+
+            <header class="hero-header">
+                <div class="logo-badge">💾 TRUST NOBODY v1.0.8</div>
+                <h1 class="logo-title">TRUST <span class="accent-text">NOBODY</span></h1>
+                <p class="logo-subtitle">A cozy retro social deduction terminal. Trick others or expose the infiltrator!</p>
+            </header>
+
+            <!-- Main split layout: forms left, mascot panel right -->
+            <div class="home-split-layout">
+                <div class="retro-window setup-window" style="margin-bottom: 0; flex: 1.2;">
+                    <div class="window-header">
+                        <span class="window-title">PLAYER SETUP</span>
+                    </div>
+                    <div class="window-body card setup-card">
+                        <!-- Name Entry -->
+                        <div class="input-group">
+                            <label for="player-name">Player Name:</label>
+                            <input type="text" id="player-name" placeholder="Enter name..." maxlength="12" class="pixel-input">
+                        </div>
+
+                        <!-- Avatar Selection Grid -->
+                        <div class="avatar-select-section" style="margin-bottom: 1.5rem; text-align: left;">
+                            <label class="avatar-select-label">Select Character Card:</label>
+                            <div id="avatar-grid" class="avatar-grid">
+                                <!-- Filled dynamically by script -->
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem;">
+                                <span id="selected-avatar-name" class="avatar-label-text">CHOOSE CHAR</span>
+                                <button type="button" id="random-avatar-btn" class="btn btn-secondary" style="width: auto; padding: 0.35rem 0.75rem; font-size: 1.15rem;">🎲 RANDOM</button>
+                            </div>
+                        </div>
+
+                        <!-- Create Room Block -->
+                        <div class="action-block">
+                            <button id="create-room-btn" class="btn btn-primary">Create New Room</button>
+                        </div>
+
+                        <div class="divider"><span>OR</span></div>
+
+                        <!-- Join Room Block -->
+                        <div class="join-block">
+                            <div class="input-group">
+                                <label for="room-code-input">Enter Room Code:</label>
+                                <input type="text" id="room-code-input" placeholder="e.g. ABCD" maxlength="4" style="text-transform: uppercase;" class="pixel-input">
+                            </div>
+                            <button id="join-room-btn" class="btn btn-secondary">Join Existing Room</button>
+                        </div>
+
+                        <!-- Error Message Display -->
+                        <div id="error-display" class="error-box" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <!-- Mascot Guide panel -->
+                <div class="retro-window mascot-guide-window" style="margin-bottom: 0; flex: 0.8;">
+                    <div class="window-header">
+                        <span class="window-title">HOW TO PLAY</span>
+                    </div>
+                    <div class="window-body guide-panel-body">
+                        <h3>MEET THE TEAM:</h3>
+                        <div class="mascot-guide-item">
+                            <img src="/assets/avatars/detective_cat.png" class="guide-mascot-pic" alt="Detective Cat">
+                            <div>
+                                <h4>DETECTIVE CAT</h4>
+                                <p>Cleans the databases.</p>
+                            </div>
+                        </div>
+                        <div class="mascot-guide-item">
+                            <img src="/assets/avatars/robot_agent.png" class="guide-mascot-pic" alt="Robot Agent">
+                            <div>
+                                <h4>ROBOT AGENT</h4>
+                                <p>Monitors rounds.</p>
+                            </div>
+                        </div>
+                        <div class="mascot-guide-item">
+                            <img src="/assets/avatars/chaos_frog.png" class="guide-mascot-pic" alt="Chaos Frog">
+                            <div>
+                                <h4>CHAOS FROG</h4>
+                                <p>Compromises packets.</p>
+                            </div>
+                        </div>
+                        <div class="mascot-guide-item">
+                            <img src="/assets/avatars/ghost_spy.png" class="guide-mascot-pic" alt="Ghost Spy">
+                            <div>
+                                <h4>GHOST SPY</h4>
+                                <p>Tracks voting.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= LOBBY SCREEN ================= -->
+        <section id="lobby-screen" class="screen">
+            <div class="retro-window lobby-window">
+                <div class="window-header">
+                    <span class="window-title">ROOM LOBBY</span>
+                </div>
+                <div class="window-body card setup-card">
+                    <header class="lobby-header-panel">
+                        <h2>ROOM CODE: <span id="room-code-display" class="accent-text">----</span></h2>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.3rem;">
+                            <p class="player-count-label">Players Connected: <span id="player-count">0</span> / 10</p>
+                            <button id="leaderboard-btn" class="btn btn-secondary" style="width: auto; padding: 0.3rem 0.85rem; font-size: 1.2rem;">🏆 Leaderboard</button>
+                        </div>
+                    </header>
+
+                    <!-- Timer Setting Sync Panel -->
+                    <div class="config-card" style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                        <div class="config-row" style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="config-label" style="font-size: 1.3rem;">⏱️ ROUND TIME:</span>
+                            
+                            <!-- Host selection select box -->
+                            <div id="host-timer-control" style="display: none;">
+                                <select id="lobby-timer-select" class="config-select">
+                                    <option value="120">2 MIN (120s)</option>
+                                    <option value="180" selected>3 MIN (180s)</option>
+                                    <option value="240">4 MIN (240s)</option>
+                                    <option value="300">5 MIN (300s)</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Client read-only displays -->
+                            <div id="client-timer-display" style="display: block;">
+                                <span id="lobby-timer-val" style="font-weight: 700; font-size: 1.35rem;">3 Minutes (180s)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Connected Players Grid -->
+                    <div class="players-container-box">
+                        <h3>Lobby Players</h3>
+                        <div id="players-list" class="players-grid">
+                            <!-- Cards will be dynamically inserted here by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Lobby Footer / Status -->
+                    <div class="lobby-footer" style="margin-top: 1.5rem;">
+                        <p id="lobby-status-msg" class="status-msg">Waiting for players to join...</p>
+                        <button id="start-game-btn" class="btn btn-start" style="display: none;">
+                            START GAME
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= ONBOARDING SCREEN ================= -->
+        <section id="onboarding-screen" class="screen">
+            <div class="retro-window onboarding-window" style="max-width: 550px; margin: 0 auto;">
+                <div class="window-header">
+                    <span class="window-title">HOW TO PLAY</span>
+                </div>
+                
+                <div class="window-body card onboarding-card">
+                    <!-- Page 1: Roles -->
+                    <div id="onboarding-page-1" class="onboarding-page active-page">
+                        <h3 class="manual-page-title">PAGE 1/3: THE ROLES</h3>
+                        <div class="rule-box red-accent">
+                            <h4 class="rule-heading">👻 GHOST SPY (MAFIA)</h4>
+                            <p>One player is the Mafia. You receive a secret target word and mission. Trick others into saying it to complete your tasks!</p>
+                        </div>
+                        <div class="rule-box green-accent" style="margin-top: 1rem;">
+                            <h4 class="rule-heading">🐱 DETECTIVE CAT (AGENT)</h4>
+                            <p>All other players are Agents. Chat naturally and complete your secret message prompts. Expose acting sus players!</p>
+                        </div>
+                    </div>
+
+                    <!-- Page 2: Missions -->
+                    <div id="onboarding-page-2" class="onboarding-page" style="display: none;">
+                        <h3 class="manual-page-title">PAGE 2/3: MISSIONS</h3>
+                        <div class="rule-box purple-accent">
+                            <h4 class="rule-heading">🤖 ROBOT AGENT (TASKS)</h4>
+                            <p>Every player gets a secret prompt. Completing it helps your side. The Mafia must complete their task before time runs out to win!</p>
+                        </div>
+                        <div class="manual-illustration" style="text-align: center; margin-top: 1rem; font-size: 2.2rem;">
+                            📟 ➡️ 🖥️
+                        </div>
+                    </div>
+
+                    <!-- Page 3: Voting & Win Conditions -->
+                    <div id="onboarding-page-3" class="onboarding-page" style="display: none;">
+                        <h3 class="manual-page-title">PAGE 3/3: VICTORY</h3>
+                        <div class="rule-box yellow-accent">
+                            <h4 class="rule-heading">🗳️ VOTING PHASE</h4>
+                            <p>When the round timer runs out, players select who they think is the Mafia. If the Mafia gets voted out, the Agents win. If they survive, they win!</p>
+                        </div>
+                        <div class="rule-box cream-accent" style="margin-top: 1rem;">
+                            <h4 class="rule-heading">👑 WIN CONDITIONS</h4>
+                            <p><strong>Mafia wins</strong> if they complete their target word mission AND survive the vote.<br><strong>Agents win</strong> if they successfully vote out the Mafia.</p>
+                        </div>
+                    </div>
+
+                    <!-- Page Navigation Controls -->
+                    <div class="manual-nav" style="display: flex; justify-content: space-between; margin-top: 1.5rem; align-items: center;">
+                        <button id="manual-prev-btn" class="btn btn-secondary" style="width: auto; padding: 0.5rem 1rem; font-size: 1.25rem;">◀ PREV</button>
+                        <span id="manual-page-indicator" style="font-size: 1.25rem; color: #4b5563;">1 / 3</span>
+                        <button id="manual-next-btn" class="btn btn-secondary" style="width: auto; padding: 0.5rem 1rem; font-size: 1.25rem;">NEXT ▶</button>
+                    </div>
+
+                    <!-- Ready Up Panel -->
+                    <div class="ready-panel" style="margin-top: 1.5rem; border-top: 2px dashed rgba(0,0,0,0.1); padding-top: 1.25rem; text-align: center;">
+                        <button id="ready-btn" class="btn btn-primary" style="margin-bottom: 0.75rem;">I AM READY</button>
+                        <p id="ready-status-text" class="status-msg" style="font-weight: 700; color: var(--accent-pink); font-size: 1.3rem;">0 of 0 players ready</p>
+                        <p class="status-msg" style="font-size: 1.2rem; color: #4b5563; margin-top: 0.4rem; font-style: normal;">Deployment in <span id="onboarding-timeout-val">15</span>s</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= GAMEPLAY SCREEN ================= -->
+        <section id="gameplay-screen" class="screen">
+            <div class="gameplay-layout">
+                <!-- Left Sidebar: Info Panel -->
+                <div class="sidebar-panel retro-window">
+                    <div class="window-header">
+                        <span class="window-title">GAME INFO</span>
+                    </div>
+                    <div class="window-body card sidebar-body-card">
+                        <div class="sidebar-header">
+                            <h2>Room: <span id="game-room-code" class="accent-text">----</span></h2>
+                            <div class="timer-box">
+                                <span class="timer-title">⏱️ TIME LEFT</span>
+                                <div id="game-timer" class="timer-digits">03:00</div>
+                            </div>
+                        </div>
+                        
+                        <div class="role-reveal-box">
+                            <h3>Private Role</h3>
+                            <div id="role-display" class="role-value">Agent</div>
+                            <p id="role-instruction" class="role-instruction">Find the Mafia who has a secret mission.</p>
+                        </div>
+
+                        <div id="gameplay-mission-box" class="role-reveal-box" style="display: none; margin-top: 1rem;">
+                            <h3>Secret Mission Document</h3>
+                            <p id="gameplay-mission-text" class="role-instruction" style="font-weight: 700; color: #ffffff;"></p>
+                        </div>
+
+                        <div class="lobby-players-box">
+                            <h3>Active Agents</h3>
+                            <ul id="game-players-list" class="game-players-list">
+                                <!-- Players list will be populated dynamically -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Chat Panel -->
+                <div class="chat-panel retro-window">
+                    <div class="window-header">
+                        <span class="window-title">CHAT TERMINAL</span>
+                    </div>
+                    <div class="window-body card chat-body-card">
+                        <!-- Random Event Banner -->
+                        <div id="random-event-banner">
+                            <div class="event-banner-header">
+                                <span id="event-banner-icon" class="event-banner-icon">🎲</span>
+                                <span id="event-banner-title" class="event-banner-title">EVENT</span>
+                                <span id="event-banner-timer" class="event-banner-timer"></span>
+                            </div>
+                            <div id="event-banner-desc" class="event-banner-desc">Loading event...</div>
+                        </div>
+                        <!-- Messages Log -->
+                        <div id="chat-messages" class="chat-messages">
+                            <!-- Message bubbles will be added here by JS -->
+                        </div>
+                        <!-- Typing Indicator -->
+                        <div id="chat-typing-indicator" class="chat-typing-indicator" style="display: none;">
+                            Agent is typing...
+                        </div>
+                        <!-- Chat Input Controls -->
+                        <form id="chat-form" class="chat-form">
+                            <input type="text" id="chat-input" placeholder="Type a message..." maxlength="100" autocomplete="off" class="pixel-input">
+                            <button type="submit" id="send-msg-btn" class="btn btn-send">Send</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= VOTING SCREEN ================= -->
+        <section id="voting-screen" class="screen">
+            <div class="retro-window voting-window">
+                <div class="window-header">
+                    <span class="window-title">VOTE</span>
+                </div>
+                <div class="window-body card setup-card">
+                    <header class="lobby-header">
+                        <div class="voting-banner">
+                            <span class="pulse-radar"></span>
+                            <h2 class="voting-banner-title">WHO IS THE MAFIA?</h2>
+                        </div>
+                        <p class="status-msg">Select the player you suspect most or choose to skip.</p>
+                        <p id="voting-progress" class="player-count-label">0 of 0 players voted</p>
+                    </header>
+
+                    <div id="voting-grid" class="players-grid" style="margin-bottom: 1.5rem;">
+                        <!-- Vote buttons will be dynamically generated -->
+                    </div>
+                    
+                    <button id="skip-vote-btn" class="btn btn-secondary">Skip Vote</button>
+                    <p id="vote-lock-msg" class="status-msg" style="display: none; margin-top: 1rem; color: var(--accent-pink); font-weight: 700;">Your vote is locked. Waiting for others...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= RESULTS SCREEN ================= -->
+        <section id="results-screen" class="screen">
+            <div class="retro-window results-window">
+                <div class="window-header">
+                    <span class="window-title">ROUND SUMMARY</span>
+                </div>
+                <div class="window-body card results-card">
+                    <div id="outcome-banner" class="outcome-banner">
+                        OBSERVERS WIN
+                    </div>
+
+                    <!-- Points Earned This Round -->
+                    <div id="points-earned-section" class="points-earned-section" style="display: none;">
+                        <div class="points-earned-header">⭐ POINTS EARNED THIS ROUND</div>
+                        <div id="points-breakdown-list" class="points-breakdown-list"></div>
+                        <div class="points-total-row">
+                            <span>Total Points Earned:</span>
+                            <span id="points-total-val" class="points-total-amount">+0</span>
+                        </div>
+                        <div class="points-rank-row">
+                            <span>Current Rank:</span>
+                            <span id="current-rank-display" class="current-rank-badge">🔰 Rookie</span>
+                            <span class="total-pts-display">(<span id="total-points-display">0</span> pts total)</span>
+                        </div>
+                    </div>
+
+                    <div class="results-split-reveal" style="display: flex; gap: 1.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                        
+                        <div class="results-mascot-block" id="results-mascot-container" style="flex: 0.8; display: flex; align-items: center; justify-content: center; border: 3px solid #000; border-radius: 8px; background: #ffffff; padding: 10px;">
+                            <!-- Mascot image dynamically inserted -->
+                        </div>
+
+                        <div class="result-detail-grid" style="flex: 1.2;">
+                            <div class="detail-box">
+                                <span class="detail-title">🕵️‍♂️ MAFIA</span>
+                                <div id="results-hidden-agent-name" class="detail-value">---</div>
+                            </div>
+                            <div class="detail-box">
+                                <span class="detail-title">🎯 MISSION STATUS</span>
+                                <div id="results-mission-status" class="detail-value text-success">Completed</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Awards Section -->
+                    <div id="awards-section" style="display:none;">
+                        <h3 style="font-family:var(--font-heading);font-size:0.6rem;margin-bottom:0.75rem;">🏅 ROUND AWARDS</h3>
+                        <div id="awards-grid" class="awards-grid"></div>
+                    </div>
+
+                    <div class="mission-reveal-box">
+                        <h3>Secret Mission</h3>
+                        <p id="results-mission-text" class="mission-text">"Make someone type skibidi"</p>
+                    </div>
+
+                    <!-- MVP Detectives section -->
+                    <div class="votes-breakdown-box mvp-box">
+                        <h3>👑 MVP DETECTIVES</h3>
+                        <div id="mvp-detectives-list" class="votes-breakdown-list">
+                            <!-- MVP list populated dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="votes-breakdown-box">
+                        <h3>Vote Breakdown</h3>
+                        <div id="votes-breakdown-list" class="votes-breakdown-list">
+                            <!-- Votes list populated dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="votes-breakdown-box">
+                        <h3>Player Missions</h3>
+                        <div id="missions-breakdown-list" class="votes-breakdown-list">
+                            <!-- Missions list populated dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="lobby-footer">
+                        <!-- Play again button for host -->
+                        <button id="play-again-btn" class="btn btn-start" style="display: none;">
+                            PLAY AGAIN
+                        </button>
+                        <p id="play-again-status" class="status-msg" style="display: block;">
+                            Waiting for host to start another round...
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ===== LEADERBOARD MODAL ===== -->
+    <div id="leaderboard-modal" class="leaderboard-overlay" style="display: none;">
+        <div class="leaderboard-modal-inner retro-window">
+            <div class="window-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="window-title">🏆 LEADERBOARD — TOP PLAYERS</span>
+                <button id="close-leaderboard-btn" class="lb-close-btn">✕ CLOSE</button>
+            </div>
+            <div class="window-body leaderboard-body">
+                <div class="leaderboard-col-headers">
+                    <span>#</span>
+                    <span></span>
+                    <span>PLAYER</span>
+                    <span>RANK</span>
+                    <span>PTS</span>
+                </div>
+                <div id="leaderboard-list" class="leaderboard-list">
+                    <!-- populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Socket.io script (Served by Socket.io library on server) -->
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- Client side script -->
+    <script src="client.js"></script>
+</body>
+</html>
